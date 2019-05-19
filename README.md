@@ -10,11 +10,11 @@ DDPNA is a package for Disease-Drived Differential Proteins(DFP) and Proteome-Wi
 Installation
 ------------
 
-You can install the developed version of DDPNA from [github](https://github.com/vqv/ggbiplot) with:
+You can install the developed version of DDPNA from [github](https://github.com/liukf10/DDPNA)
 
 ``` r
-library(devtools)
-install_github("liukf10/DDPNA")
+install.packages("devtools")
+devtools::install_github("liukf10/DDPNA")
 ```
 
 Example
@@ -25,7 +25,7 @@ This is a basic example which shows you how to solve a common problem:
 ``` r
 library(DDPNA)
 #> 
-
+##data extract and clean
 data(Dforimpute)
 #outlier sample remove and miss value impute
 data <- Data_impute(Dforimpute, miss.value = 0, distmethod = "manhattan", plot = FALSE)
@@ -33,10 +33,13 @@ data <- Data_impute(Dforimpute, miss.value = 0, distmethod = "manhattan", plot =
 #> verbose): The sample ad059 have been removed
 logD <- data$log2_value
 rownames(logD) <- data$inf$ori.ID
+## network construction
 #net is constructed by WGCNA blockwiseModules function.
-##the parameter:datExpr = t(logD), TOMType = "unsigned", deepSplit = 4, minModuleSize = 17, reassignThreshold = 0.05, mergeCutHeight = 0.07
+#the parameter:datExpr = t(logD), TOMType = "unsigned", deepSplit = 4, minModuleSize = 17, reassignThreshold = 0.05, mergeCutHeight = 0.07
 data(net)
+## module information extract
 Module <- Module_inf(net, data$inf)
+## differential protein analysis
 oriData <- Dforimpute$LFQ
 colnames(oriData) <- gsub("LFQ.intensity.","", colnames(oriData))
 oriData <- oriData[,colnames(logD)]
@@ -45,18 +48,19 @@ group <- gsub("[0-9]+","", colnames(oriData))
 up <- changedID(oriData, group, vs.set2 = "ad",vs.set1 = "ctl",
                 rank = "foldchange",anova = FALSE, Padj = "none",cutoff = 1,
                 datatype = "none",fctype = "up")
+##module-DFP associated analysis
 FCSenrich <- Module_Enrich(Module, up, datainf = rownames(oriData), coln="ori.ID")
 FCSenrich <- FCSenrichplot(FCSenrich)
 ```
 
-<img src="README-example-1.png" width="100%" />
+<img src="man/figures/README-example-1.png" width="100%" />
 
 ``` r
 pos <- which(net$colors == 4)
 Mod4_PCA <- modpcomp(logD[pos,], net$colors[pos], plot = TRUE, group = group)
 ```
 
-<img src="README-example-2.png" width="100%" />
+<img src="man/figures/README-example-2.png" width="100%" />
 
 ``` r
 Mod4 <- getmoduleHub(logD, Module, 4, coln = "ori.ID",adjustp = FALSE)
@@ -99,7 +103,7 @@ if (requireNamespace("MEGENA", quietly = TRUE)) {
 #> $pnet
 ```
 
-<img src="README-example-3.png" width="100%" />
+<img src="man/figures/README-example-3.png" width="100%" />
 
     #> 
     #> $node.features
@@ -219,3 +223,18 @@ if (requireNamespace("MEGENA", quietly = TRUE)) {
     #> V9HW90     -0.81186041
     #> A0A024R3W7 -0.02101455
     #> B4DJT9      2.05666008
+
+References
+==========
+
+1.  Peter, L.; Steve H. WGCNA: an R package for weighted correlation network analysis. *BMC Bioinformatics.* **2008**, 9, 559.
+
+2.  Won-Min Song, Bin Zhang. Multiscale Embedded Gene Co-expression Network Analysis *PLOS Computational Biology.* **2015**, 11(11), e1004574
+
+3.  Zhenfeng Wu, et al. NormExpression: an R package to normalize gene expression data using evaluated methods. *BioRxiv* **2018**, JAN.
+
+4.  Aravind Subramanian, et al. Gene set enrichment analysis: A knowledge-based approach for interpreting genome-wide expression profiles *PNAS* **2005**, 102(43), 15545-15550.
+
+5.  Vince V. ggbiplot. **2018**; <https://github.com/vqv/ggbiplot>.
+
+6.  Michael C Oldham, et al. Network Methods for Describing Sample Relationships in Genomic Datasets: Application to Huntington's Disease; <https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/SampleNetwork/>

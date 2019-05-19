@@ -41,9 +41,9 @@ Kefu Liu
 \examples{
 rm(list = ls())
 library(DDPNA)
-data(Dforimpute)
 data(net)
-data <- Data_impute(Dforimpute, miss.value = 0, distmethod = "manhattan")
+data(imputedData)
+data <- imputedData
 Module <- Module_inf(net, data$inf)
 }
 

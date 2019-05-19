@@ -3,9 +3,7 @@
 
 exportPattern("^[^\\.]")
 
-importFrom(impute, impute.knn)
-importFrom(WGCNA, labels2colors,pickSoftThreshold)
-importFrom(Biostrings, pairwiseAlignment,readAAStringSet)
+
 importFrom(MEGENA, calculate.PFN, get.DegreeHubStatistic)
 importFrom(igraph, graph.data.frame, induced.subgraph)
 importFrom(ggalt, geom_xspline)

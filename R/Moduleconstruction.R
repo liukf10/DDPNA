@@ -10,7 +10,10 @@ SoftThresholdScaleGraph <- function(data,
                                     ylab = "Scale Free Topology Model Fit, signed R^2",
                                     main = "Scale independence",
                                     filename = NULL){
-  sft <- pickSoftThreshold(data);
+  if (!requireNamespace("WGCNA", quietly = TRUE)) {
+    stop ("WGCNA needed for this function to work. Please install it.",
+          call. = FALSE)}
+  sft <- WGCNA::pickSoftThreshold(data);
   powers <- c(c(1:10), seq(from = 12, to = 20, by = 2));
   if (is.character(filename) & length(filename) == 1){
     if (!dir.exists("plot")) dir.create("plot");
@@ -60,7 +63,6 @@ ME_inf <- function(MEs, data, intensity.type = "LFQ", rowname = NULL){
 
 Module_inf <- function(net, inf, inftype = "Convert", IDname = NULL, ...){
   inftype <- match.arg(inftype, c("Convert","MaxQ","none"));
-  moduleColors <- labels2colors(net$colors);
   if (inftype == "Convert") inf <- data.frame(ori.ID = inf$ori.ID,
                                               new.ID = inf$new.ID,
                                               stringsAsFactors = FALSE)
@@ -72,11 +74,9 @@ Module_inf <- function(net, inf, inftype = "Convert", IDname = NULL, ...){
   }
   if (class(inf) == "data.frame") inf <- data.frame(inf,
                                                     moduleNum = net$colors,
-                                                    moduleColors,
                                                     stringsAsFactors = FALSE)
   else inf <- data.frame(ProteinID = inf,
                          moduleNum = net$colors,
-                         moduleColors,
                          stringsAsFactors = FALSE)
 }
 

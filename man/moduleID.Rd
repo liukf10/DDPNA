@@ -39,9 +39,9 @@ Kefu Liu
 \examples{
 rm(list = ls())
 library(DDPNA)
-data(Dforimpute)
 data(net)
-data <- Data_impute(Dforimpute, miss.value=0, distmethod="manhattan")
+data(imputedData)
+data <- imputedData
 logD <- data$log2_value
 rownames(logD) <- data$inf$ori.ID
 group <- gsub("[0-9]+","", colnames(logD))

@@ -254,17 +254,17 @@ Data_impute <- function(data, inf = "inf", intensity = "LFQ", miss.value = NA,
     gm
   }
   if (!requireNamespace("impute", quietly = TRUE)) {
-    stop ("impute needed for this function to work. Please install it.",
+    stop ("impute in Bioconductor needed for this function to work. Please install it.",
          call. = FALSE)
   }
-  intensity <- impute.knn(as.matrix(data$intensity));
+  intensity <- impute::impute.knn(as.matrix(data$intensity));
   intensity <- as.data.frame(intensity$data);
   geo_mean <- geo_mean(intensity);
   relative_value <- intensity/geo_mean;
-  #relative_value <- impute.knn(as.matrix(data$relative_value));
+  #relative_value <- impute::impute.knn(as.matrix(data$relative_value));
   #relative_value <- as.data.frame(relative_value$data);
   log2_value <- log2(relative_value);
-  #log2_value <- impute.knn(as.matrix(data$log2_value));
+  #log2_value <- impute::impute.knn(as.matrix(data$log2_value));
   #log2_value<as.data.frame(log2_value<$data);
   proteomic_data <- list();
   proteomic_data$inf <- data$inf;
@@ -286,17 +286,17 @@ Data_impute <- function(data, inf = "inf", intensity = "LFQ", miss.value = NA,
     gm
   }
   if (!requireNamespace("impute", quietly = TRUE)) {
-    stop ("impute needed for this function to work. Please install it.",
+    stop ("impute in Bioconductor needed for this function to work. Please install it.",
          call. = FALSE)
   }
-  intensity <- impute.knn(as.matrix(data$intensity));
+  intensity <- impute::impute.knn(as.matrix(data$intensity));
   intensity <- as.data.frame(intensity$data);
   geo_mean <- geo_mean(intensity);
   #relative_value <- intensity/geo_mean;
-  relative_value <- impute.knn(as.matrix(data$relative_value));
+  relative_value <- impute::impute.knn(as.matrix(data$relative_value));
   relative_value <- as.data.frame(relative_value$data);
   #log2_value <- log2(relative_value);
-  log2_value <- impute.knn(as.matrix(data$log2_value));
+  log2_value <- impute::impute.knn(as.matrix(data$log2_value));
   log2_value <- as.data.frame(log2_value$data);
   proteomic_data <- list();
   proteomic_data$inf <- data$inf;
@@ -318,20 +318,20 @@ Data_impute <- function(data, inf = "inf", intensity = "LFQ", miss.value = NA,
     gm
   }
   if (!requireNamespace("impute", quietly = TRUE)) {
-    stop ("impute needed for this function to work. Please install it.",
+    stop ("impute in Bioconductor needed for this function to work. Please install it.",
          call. = FALSE)
   }
   if (length(miss.value) != 1 ) stop("wrong miss value");
   if (!miss.value %in% c(0, 1, NA)) stop("wrong miss value");
   data$intensity[data$intensity == miss.value] <- NA;
-  intensity <- impute.knn(as.matrix(data$intensity),...);
+  intensity <- impute::impute.knn(as.matrix(data$intensity),...);
   intensity <- as.data.frame(intensity$data);
   geo_mean <- geo_mean(intensity);
   relative_value <- intensity/geo_mean;
-  #relative_value <- impute.knn(as.matrix(data$relative_value));
+  #relative_value <- impute::impute.knn(as.matrix(data$relative_value));
   #relative_value <- as.data.frame(relative_value$data);
   log2_value <- log2(relative_value);
-  #log2_value <- impute.knn(as.matrix(data$log2_value));
+  #log2_value <- impute::impute.knn(as.matrix(data$log2_value));
   #log2_value<as.data.frame(log2_value<$data);
   proteomic_data <- list();
   proteomic_data$inf <- data$inf;

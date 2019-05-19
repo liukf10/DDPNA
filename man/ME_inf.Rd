@@ -35,9 +35,9 @@ Kefu Liu
 \examples{
 rm(list = ls())
 library(DDPNA)
-data(Dforimpute)
 data(net)
-data <- Data_impute(Dforimpute, miss.value = 0, distmethod = "manhattan")
+data(imputedData)
+data <- imputedData
 logD <- data$log2_value
 MEs <- ME_inf(net$MEs, logD)
 }

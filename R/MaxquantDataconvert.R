@@ -35,24 +35,26 @@ MaxQdataconvert <- function(pgfilename, IDname = "Majority.protein.IDs",
     inf <- gsub(".*(tr|sp)\\|(.*)\\|.*", "\\2", inf);
     if (!is.null(db2.path)) {
       if(file.exists(db2.path)){
-        my_sequences <- .uniprot_database(input_file = db2.path);
-        pos <- match(inf, my_sequences$pro_info$Uniprot.ID);
-        inf <- my_sequences$pro_info[pos, 1:3];
-        con <- which(is.na(inf[ ,2]));
-        #if (length(con) != 0) inf[con, 2] <- my_fasta[con, IDname];
-        if (length(con) != 0) inf[con, 2] <- data$protein_IDs[con];
-        if (CONremove & length(con)!= 0) {
-          inf <- inf[-con, ];
-          data$protein_IDs <- data$protein_IDs[-con]
-          data$intensity <- data$intensity[-con, ];
-        }
-        rownames(inf) <- 1:nrow(inf);
-        colnames(inf) <- c("db.type", "ori.ID", "ENTRY.NAME");
-        NEXTtoIDmatch = TRUE;
-        if (length(con) == length(inf)) {
-          inf <- data$protein_IDs;
-          if(verbose > 0) warning("protein ID is no match for db2.");
-          NEXTtoIDmatch = FALSE;
+        my_sequences <- try(.uniprot_database(input_file = db2.path))
+        if (class(data_match) != "try-error") {
+          pos <- match(inf, my_sequences$pro_info$Uniprot.ID);
+          inf <- my_sequences$pro_info[pos, 1:3];
+          con <- which(is.na(inf[ ,2]));
+          #if (length(con) != 0) inf[con, 2] <- my_fasta[con, IDname];
+          if (length(con) != 0) inf[con, 2] <- data$protein_IDs[con];
+          if (CONremove & length(con)!= 0) {
+            inf <- inf[-con, ];
+            data$protein_IDs <- data$protein_IDs[-con]
+            data$intensity <- data$intensity[-con, ];
+          }
+          rownames(inf) <- 1:nrow(inf);
+          colnames(inf) <- c("db.type", "ori.ID", "ENTRY.NAME");
+          NEXTtoIDmatch = TRUE;
+          if (length(con) == length(inf)) {
+            inf <- data$protein_IDs;
+            if(verbose > 0) warning("protein ID is no match for db2.");
+            NEXTtoIDmatch = FALSE;
+          }
         }
       }
     }
@@ -217,10 +219,10 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
                      evalue = 0.1, verbose = 1)
 {
   #extract local database
-#  if (!requireNamespace("Biostrings", quietly = TRUE)) {
-#    stop("Biostrings needed for this function to work. Please install it.",
-#         call. = FALSE)
-#  }
+  if (!requireNamespace("Biostrings", quietly = TRUE)) {
+    stop("Biostrings in Bioconductor needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   if (is.null(db1.path)) stop ("db1.path is null.");
   if (is.null(db2.path)) stop ("db2.path is null.");
   if (is.null(out.folder)) stop ("out.folder path is null.");
@@ -314,13 +316,13 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
         scorem <- 0;
         type2_results <- list();
         for (k in 1:length(similar_seq)) {
-          scorem[k] <- pairwiseAlignment(as.character(ori_seq),
-                                         as.character(similar_seq[k]),
-                                         type = "overlap",
-                                         substitutionMatrix = "BLOSUM62",
-                                         gapOpening = 9.5,
-                                         gapExtension = 0.5,
-                                         scoreOnly = TRUE);
+          scorem[k] <- Biostrings::pairwiseAlignment(as.character(ori_seq),
+                                                     as.character(similar_seq[k]),
+                                                     type = "overlap",
+                                                     substitutionMatrix = "BLOSUM62",
+                                                     gapOpening = 9.5,
+                                                     gapExtension = 0.5,
+                                                     scoreOnly = TRUE);
         }
         type2_results[[name]] <- data.frame(rep(name, length(similar_seq)),
                                             similar_seq,
@@ -412,8 +414,12 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
 #Uniprot database fasta file(type2 suited for human, mouse, Monkey )
 ##version2.0 no factor format
 .uniprot_database <- function(input_file, type = 1) {
+  if (!requireNamespace("Biostrings", quietly = TRUE)) {
+    stop("Biostrings in Bioconductor needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   # read fasta file
-  my_fasta <- readAAStringSet(input_file);
+  my_fasta <- Biostrings::readAAStringSet(input_file);
   protein_inf <- names(my_fasta);
   #seperate information based by "|"
   if (type == 1) {
@@ -441,7 +447,7 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
     protein_inf[ ,3] <- entryname;
     protein_inf <- data.frame(protein_inf, GN, stringsAsFactors = FALSE);
   }
-  my_id_sequence <- readAAStringSet(input_file);
+  my_id_sequence <- Biostrings::readAAStringSet(input_file);
   names(my_id_sequence) <- as.character(protein_inf$Uniprot.ID);
   list(pro_info = protein_inf, pro_seq = my_id_sequence);
 }

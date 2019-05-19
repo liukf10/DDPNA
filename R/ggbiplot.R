@@ -19,33 +19,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-#' Biplot for Principal Components using ggplot2
-#'
-#' @param pcobj           an object returned by prcomp() or princomp()
-#' @param choices         which PCs to plot
-#' @param scale           covariance biplot (scale = 1), form biplot (scale = 0). When scale = 1, the inner product between the variables approximates the covariance and the distance between the points approximates the Mahalanobis distance.
-#' @param obs.scale       scale factor to apply to observations
-#' @param var.scale       scale factor to apply to variables
-#' @param pc.biplot       for compatibility with biplot.princomp()
-#' @param groups          optional factor variable indicating the groups that the observations belong to. If provided the points will be colored according to groups
-#' @param ellipse         draw a normal data ellipse for each group?
-#' @param ellipse.prob    size of the ellipse in Normal probability
-#' @param labels          optional vector of labels for the observations
-#' @param labels.size     size of the text used for the labels
-#' @param alpha           alpha transparency value for the points (0 = transparent, 1 = opaque)
-#' @param circle          draw a correlation circle? (only applies when prcomp was called with scale = TRUE and when var.scale = 1)
-#' @param var.axes        draw arrows for the variables?
-#' @param varname.size    size of the text for variable names
-#' @param varname.adjust  adjustment factor the placement of the variable names, >= 1 means farther from the arrow
-#' @param varname.abbrev  whether or not to abbreviate the variable names
-#'
-#' @return                a ggplot2 plot
-#' @export
-#' @examples
-#'   data(wine)
-#'   wine.pca <- prcomp(wine, scale. = TRUE)
-#'   print(ggbiplot(wine.pca, obs.scale = 1, var.scale = 1, groups = wine.class, ellipse = TRUE, circle = TRUE))
-#'
+
 .ggbiplot <- function(pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
                       obs.scale = 1 - scale, var.scale = scale,
                       groups = NULL, ellipse = FALSE, ellipse.prob = 0.68,
