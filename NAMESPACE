@@ -1,0 +1,25 @@
+#exportPattern("^[[:alpha:]]+")
+
+
+exportPattern("^[^\\.]")
+
+importFrom(impute, impute.knn)
+importFrom(WGCNA, labels2colors,pickSoftThreshold)
+importFrom(Biostrings, pairwiseAlignment,readAAStringSet)
+importFrom(MEGENA, calculate.PFN, get.DegreeHubStatistic)
+importFrom(igraph, graph.data.frame, induced.subgraph)
+importFrom(ggalt, geom_xspline)
+import(ggplot2)
+import(stats)
+import(graphics)
+import(utils)
+import(grDevices)
+import(plyr)
+import(scales)
+import(grid)
+#importFrom("graphics", "abline", "lines", "plot", "text")
+#  importFrom("stats", "aov", "as.dist", "cor", "hclust", "oneway.test",
+#             "p.adjust", "p.adjust.methods", "pairwise.t.test", "phyper",
+#             "prcomp", "sd", "spline")
+#  importFrom("utils", "read.delim", "read.table", "write.csv")
+

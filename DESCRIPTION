@@ -1,0 +1,23 @@
+Package: DDPNA
+Type: Package
+Title: Disease-Drived Differential Proteins and Proteome-Wide
+        Co-expression Network Associated Analysis
+Version: 1.0.0
+Date: 2019-3-17
+Author: Kefu Liu
+Maintainer: Kefu Liu <liukefu19@163.com>
+Description: It is used to associated with disease-drived differential proteins and 
+  proteome-wide co-expression network. It provides the essential analysis included 
+  t.test, ANOVA analysis to extract differential proteins. The network construction is
+  genereated by WGCNA package. The package also provide some module analysis included
+  PCA analysis, two enrichment analysis, Planner maximally filtered graph extraction
+  and hub analysis.
+Imports: Biostrings,impute, WGCNA, stats, ggplot2, ggalt, MEGENA,
+        igraph, Hmisc, utils, grDevices, plyr, scales, grid
+License: GPL-2
+Encoding: UTF-8
+Depends: R (>= 3.5)
+LazyData: true
+RoxygenNote: 6.1.1
+NeedsCompilation: no
+Packaged: 2019-05-19 01:54:22 UTC; lkf
