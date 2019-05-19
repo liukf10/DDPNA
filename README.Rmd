@@ -1,0 +1,81 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-",
+  out.width = "100%"
+)
+```
+# DDPNA
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+DDPNA is a package for Disease-Drived Differential Proteins(DFP) and Proteome-Wide Co-expression Network Associated Analysis. The goal of DDPNA is offered a better methods to analyze omic data. The package is designed for proteomic data, but it is also fit for expression data in RNA-seq and metabolome. 
+It is associated DFP and co-expression network module, and constructed a Mod-DFP network to remove lower connectivity DFP. The lower connectivity DFP is hard to get the key function in PPI and is more likely a false postive protein. The Mod-DFP network can also get DFP related proteins which is more likely a false negative protein. 
+It provides the essential statisic analysis included t.test, ANOVA analysis to extract differential proteins. The package also provide some module analysis included PCA analysis, two enrichment analysis, Planner maximally filtered graph extraction and hub analysis. The co-expression network should constructed by other package or software.(WGCNA package or others) 
+
+## Installation
+
+You can install the developed version of DDPNA from [github](https://github.com/vqv/ggbiplot) with:
+
+``` r
+library(devtools)
+install_github("liukf10/DDPNA")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+library(DDPNA)
+
+data(Dforimpute)
+#outlier sample remove and miss value impute
+data <- Data_impute(Dforimpute, miss.value = 0, distmethod = "manhattan", plot = FALSE)
+logD <- data$log2_value
+rownames(logD) <- data$inf$ori.ID
+#net is constructed by WGCNA blockwiseModules function.
+##the parameter:datExpr = t(logD), TOMType = "unsigned", deepSplit = 4, minModuleSize = 17, reassignThreshold = 0.05, mergeCutHeight = 0.07
+data(net)
+Module <- Module_inf(net, data$inf)
+oriData <- Dforimpute$LFQ
+colnames(oriData) <- gsub("LFQ.intensity.","", colnames(oriData))
+oriData <- oriData[,colnames(logD)]
+rownames(oriData) <- Dforimpute$inf$ori.ID
+group <- gsub("[0-9]+","", colnames(oriData))
+up <- changedID(oriData, group, vs.set2 = "ad",vs.set1 = "ctl",
+                rank = "foldchange",anova = FALSE, Padj = "none",cutoff = 1,
+                datatype = "none",fctype = "up")
+FCSenrich <- Module_Enrich(Module, up, datainf = rownames(oriData), coln="ori.ID")
+FCSenrich <- FCSenrichplot(FCSenrich)
+pos <- which(net$colors == 4)
+Mod4_PCA <- modpcomp(logD[pos,], net$colors[pos], plot = TRUE, group = group)
+Mod4 <- getmoduleHub(logD, Module, 4, coln = "ori.ID",adjustp = FALSE)
+if (requireNamespace("MEGENA", quietly = TRUE)) {
+  try(library(MEGENA), silent = TRUE)
+  PMFG <- plot_subgraph(module = Mod4$degreeStat$gene,
+                        hub = Mod4$hub, PFN = Mod4$PMFG,
+                        node.default.color = "black",
+                        gene.set = NULL, color.code = c("grey"),
+                        show.legend = TRUE, label.hubs.only = TRUE,
+                        hubLabel.col = "red", hubLabel.sizeProp = 0.5,
+                        show.topn.hubs = 10, node.sizeProp = 13,
+                        label.sizeProp = 13, label.scaleFactor = 10,
+                        layout = "kamada.kawai")
+  print(PMFG)
+  }
+
+
+
+```
+
+
+
