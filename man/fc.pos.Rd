@@ -44,8 +44,6 @@ Kefu Liu
 }
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(imputedData)
 data <- imputedData
 relative <- data$relative_value

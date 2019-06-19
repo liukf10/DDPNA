@@ -39,8 +39,6 @@ Kefu Liu
 
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(net)
 data(imputedData)
 data <- imputedData

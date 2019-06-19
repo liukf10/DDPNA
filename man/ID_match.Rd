@@ -46,31 +46,36 @@ a data.frame included 4 columns: ori.ID, ENTRY.NAME, new.ID, match.type.
 Kefu Liu
 }
 \note{
-This function should install blast+ software, Version 2.7.1.
-blast+ download website:ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+This function should install 'blast+' software, Version 2.7.1.
+'blast+' download website:ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+If unstall 'blast+' software, it could use R function replaced, but it will take a lot of time.
 db1.path, db2.path, out.folder are both need the complete path. Out.folder and db1.path should be in the same folder. Path should have no special character.
 data should have colname: ori.ID, ENTRY.NAME.
 }
 
+
 %% ~Make other sections like Warning with \section{Warning }{....} ~
-
-
 \examples{
-rm(list = ls())
-
-library(DDPNA)
-#database file should be downloaded and extracted the rar file in C Disk.
-#blast+ software should be downloaded and installed in C Disk.
-#the example file should be downloaded and decompress in C Disk.
+# suggested to install blast+ software
+\donttest{
+# it will take a long time without blast+ software
 data(Sample_ID_data)
-# need to install blast+ software
-out.folder = "C:/DDPNA_test/";
-blast.path = "C:/blast/ncbi-blast-2.7.1+/bin/";
-if(file.exists(out.folder) & dir.exists(blast.path))
-  data <- ID_match(ID_data,
-                   db1.path = "C:/DDPNA_test/new.fasta",
-                   db2.path = "C:/DDPNA_test/ori.fasta",
+if(requireNamespace("Biostrings", quietly = TRUE)){
+  out.folder = tempdir();
+  Biostrings::writeXStringSet(Sample_ID_data$db1,
+                              filepath = file.path(out.folder,"db1.fasta"))
+  Biostrings::writeXStringSet(Sample_ID_data$db2,
+                              filepath = file.path(out.folder,"db2.fasta"))
+  data <- ID_match(Sample_ID_data$ID_match_data,
+                   db1.path = file.path(out.folder,"db1.fasta"),
+                   db2.path = file.path(out.folder,"db2.fasta"),
                    out.folder = out.folder,
-                   blast.path = blast.path,
+                   blast.path = NULL,
                    evalue = 0.1, verbose = 1)
+ file.remove( file.path(out.folder,"db1.fasta"),
+              file.path(out.folder,"db2.fasta"))
 }
+}
+}
+
+

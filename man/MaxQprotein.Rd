@@ -5,7 +5,7 @@
 read proteomic quantification data and seperate the protein information and quantification information.
 }
 \description{
-The function will seperate data into 4 parts: protein information, intensity, iBAQ and LFQ (iBAQ and LFQ only fit for MaxQuant software result). For MaxQ data, it can remove the contaminant and reverse protein.
+The function will seperate data into 4 parts: protein information, intensity, iBAQ and LFQ (iBAQ and LFQ only fit for 'MaxQuant' software result). For MaxQ data, it can remove the contaminant and reverse protein.
 }
 \usage{
 MaxQprotein(proteinGroups, IDname = "Majority.protein.IDs",
@@ -51,8 +51,6 @@ Kefu Liu
 }
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(ProteomicData)
 # example for MaxQ Data
 MaxQdata <- MaxQprotein(ProteomicData$MaxQ)

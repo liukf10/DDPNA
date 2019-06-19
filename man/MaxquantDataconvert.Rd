@@ -2,10 +2,10 @@
 \alias{MaxQdataconvert}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-one-step to extract Maxquant quantification data and convert
+one-step to extract 'Maxquant' quantification data and convert
 }
 \description{
-Maxquant quantification data extract and homolog protein Uniprot ID match.
+'Maxquant' quantification data extract and homolog protein Uniprot ID match.
 }
 \usage{
 MaxQdataconvert(pgfilename, IDname = "Majority.protein.IDs",
@@ -19,13 +19,13 @@ MaxQdataconvert(pgfilename, IDname = "Majority.protein.IDs",
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{pgfilename}{
-  Maxquant quantification file "protein groups.txt"
+  'Maxquant' quantification file "protein groups.txt"
   }
   \item{IDname}{
   The column name of uniprot ID. The default value is "\code{Majority.protein.IDs}"" which is the column name in MaxQuant data.
   }
   \item{IDtype}{
-  "\code{MaxQ}" means \code{proteinGroups} is Maxquant quantification data, "\code{none}" means other type data. This must be (an abbreviation of) one of the strings: "\code{MaxQ}","\code{none}".
+  "\code{MaxQ}" means \code{proteinGroups} is 'Maxquant' quantification data, "\code{none}" means other type data. This must be (an abbreviation of) one of the strings: "\code{MaxQ}","\code{none}".
   }
   \item{CONremove}{
   a logical value indicated whether remove contaminant IDs. When IDtype is "none", it will remove unmatch ID compared with database2.
@@ -81,8 +81,8 @@ a list of proteomic information.
 Kefu Liu
 }
 \note{
-The function should install blast+ software, Version 2.7.1.
-blast+ download website:ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+The function should install 'blast+' software, Version 2.7.1.
+'blast+' download website:ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
 db1.path, db2.path, out.folder are both need the complete path. Out.folder and db1.path should be in the same folder. Path should have no special character.
 }
 
@@ -93,18 +93,29 @@ db1.path, db2.path, out.folder are both need the complete path. Out.folder and d
 }
 
 \examples{
-rm(list = ls())
-library(DDPNA)
-#database file should be downloaded and extracted the rar file in C Disk.
-#blast+ software should be downloaded and installed in C Disk.
-#the example file should be downloaded and decompress in C Disk.
-out.folder = "C:/DDPNA_test/";
-blast.path = "C:/blast/ncbi-blast-2.7.1+/bin/";
-pgfilename = "C:/DDPNA_test/Sample_protein_groups.txt"
-if (file.exists(pgfilename) & file.exists(out.folder) & dir.exists(blast.path))
-  Maxdata <- MaxQdataconvert(pgfilename, IDtype = "MaxQ",
-                             db1.path = "C:/DDPNA_test/new.fasta",
-                             db2.path = "C:/DDPNA_test/ori.fasta",
+# suggested to install blast+ software
+\donttest{
+# it will take a long time without blast+ software
+data(Sample_ID_data)
+if(requireNamespace("Biostrings", quietly = TRUE)){
+  out.folder = tempdir();
+  Biostrings::writeXStringSet(Sample_ID_data$db1,
+                              filepath = file.path(out.folder,"db1.fasta"))
+  Biostrings::writeXStringSet(Sample_ID_data$db2,
+                              filepath = file.path(out.folder,"db2.fasta"))
+  write.table(Sample_ID_data$pginf,
+              file = file.path(out.folder,"proteingroups.txt"),
+              quote = FALSE,
+              sep = "\t",dec = ".", row.names = FALSE, col.names = TRUE )
+  Maxdata <- MaxQdataconvert(file.path(out.folder,"proteingroups.txt"),
+                             IDtype = "MaxQ",
+                             db1.path = file.path(out.folder,"db1.fasta"),
+                             db2.path = file.path(out.folder,"db2.fasta"),
                              out.folder = out.folder,
-                             blast.path = blast.path)
+                             blast.path = NULL)
+  file.remove( file.path(out.folder,"db1.fasta"),
+               file.path(out.folder,"db2.fasta"),
+               file.path(out.folder,"proteingroups.txt") )
+  }
+}
 }

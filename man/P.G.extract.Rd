@@ -5,7 +5,7 @@
 Protein Groups information extract.
 }
 \description{
-uniprot ID, ENTRYNAME and status information extract.(only fit for MaxQuant data.)
+uniprot ID, ENTRYNAME and status information extract.(only fit for 'MaxQuant' data.)
 }
 \usage{
 P.G.extract(inf, ncol = 4, justID = FALSE,
@@ -40,8 +40,6 @@ Kefu Liu
 
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(ProteomicData)
 MaxQdata <- MaxQprotein(ProteomicData$MaxQ)
 inf <- P.G.extract(MaxQdata$protein_IDs, justID = TRUE, status = TRUE, ENTRY = TRUE)

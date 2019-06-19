@@ -27,8 +27,6 @@ Kefu Liu
 }
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(imputedData)
 data <- imputedData
 logD <- data$log2_value

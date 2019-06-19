@@ -23,9 +23,7 @@ modpcomp(data, colors, nPC = 2,
   how many PCA component will saved.
 }
   \item{plot}{
-  a logical value indicating whether draw PCA plot. This function is based on \href{https://github.com/vqv/ggbiplot}{https://github.com/vqv/ggbiplot}
-which had to be copied to \pkg{DHMDA} because \code{Bioconductor} does not support
-remote dependencies from \code{GitHub}.
+  a logical value indicating whether draw PCA plot. This function need load \pkg{ggfortify} first.
 }
   \item{filename}{
   The filename of plot. The default value is \code{NULL} which means no file saving.
@@ -41,8 +39,6 @@ Kefu Liu
 }
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(net)
 data(imputedData)
 data <- imputedData
@@ -53,7 +49,10 @@ Module_PCA <- modpcomp(logD, net$colors)
 # if plot PCA and plot module 6 PCA
 group <- gsub("[0-9]+", "", colnames(logD))
 pos <- which(net$colors == 6)
+if (requireNamespace("ggfortify", quietly = TRUE)){
+require("ggfortify")
 Module_PCA <- modpcomp(logD[pos,], net$colors[pos], plot = TRUE, group = group)
+}
 
 }
 

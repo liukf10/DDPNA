@@ -209,6 +209,8 @@ P.G.extract <- function(inf, ncol = 4,
 #blast+ download website:ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
 #blast+ version need 2.7.1
 #evalue lower means more rigorous;verbose:0 no verbose:1 have
+#190601 reset the default working directory
+#190605 add alternative solution without use blast+
 
 #db1.path="c:/workingdirectory/human-uniprot-20180108.fasta"
 #db2.path="c:/workingdirectory/mouse-uniprot-20180108.fasta"
@@ -218,16 +220,25 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
                      out.folder = NULL, blast.path = NULL,
                      evalue = 0.1, verbose = 1)
 {
+
+  question <- function (...)#190605
+  {
+    yes <- c("Yes", "Definitely", "Sure",
+               "I agree", "Absolutely")
+    no <- c("No", "Nope", "Not Sure")
+    cat(paste0(..., collapse = ""))
+    qs <- c(sample(yes, 1), sample(no, 1))
+    menu(qs) == 1
+  }
   #extract local database
   if (!requireNamespace("Biostrings", quietly = TRUE)) {
     stop("Biostrings in Bioconductor needed for this function to work. Please install it.",
          call. = FALSE)
   }
+  old.wd <- getwd(); on.exit(setwd(old.wd)); #190601
   if (is.null(db1.path)) stop ("db1.path is null.");
   if (is.null(db2.path)) stop ("db2.path is null.");
   if (is.null(out.folder)) stop ("out.folder path is null.");
-  if (is.null(blast.path)) stop ("blast.path is null.");
-  if (!dir.exists(blast.path)) stop ("blast.path is wrong.");
   if (!dir.exists(out.folder)) dir.create(out.folder);
   if (!file.exists(db2.path)) stop ("db2.path is wrong.");
   if (!file.exists(db1.path)) stop ("db1.path is wrong.");
@@ -235,15 +246,41 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
   db1.folder <- c(db1.folder, gsub("(.*)/","\\1", db1.folder));
   #db1.folder <- gsub(paste0("(",out.folder,").*"), "\\1", db1.path);
   if (all(out.folder != db1.folder)) stop ("db1.path is not in the out.folder");
+  Alignment = FALSE; #190605
+  #190605
+  if (is.null(blast.path)) {
+    message("blast.path is null.\n");
+    #cat("blast.path is null.\n");
+    if (question("Do you want to do ID_match without using blast+ software?"))
+      {if(question("It will take large amouts of time.  Are you sure?"))
+        Alignment <- TRUE else stop("Please give the blast.path and re-run the function.");}
+    else stop("Please give the blast.path and re-run the function.");
+  } else if (!dir.exists(blast.path)) {
+    message("blast.path is not exists.\n");
+    #cat("blast.path is not exists.\n");
+    if (question("Do you want to do ID_match without using blast+ software?"))
+      {if(question("It will take large amouts of time. Are you sure?"))
+        Alignment <- TRUE else stop("Please give the correct blast.path and re-run the function.");
+    } else stop("Please give the correct blast.path and re-run the function.");
+  }#190605
   my_sequences <- .uniprot_database(input_file = db1.path);
-  database1 <- my_sequences$pro_info;
-  database1_seq <- my_sequences$pro_seq;
-  if (verbose > 0) message("db1 extraction is completed")
-
+  if(class(my_sequences) == "try-error") #190605
+    stop("db1.path file is not the correct format.") else{ #190605
+      database1 <- my_sequences$pro_info;
+      database1_seq <- my_sequences$pro_seq;
+      if (verbose > 0) message("db1 extraction is completed")
+    }
   my_sequences <- .uniprot_database(input_file = db2.path);
-  database2 <- my_sequences$pro_info;
-  database2_seq <- my_sequences$pro_seq;
-  if (verbose > 0) message("db2 extraction is completed")
+  if(class(my_sequences) == "try-error") #190605
+    stop("db1.path file is not the correct format.") else{ #190605
+      database2 <- my_sequences$pro_info;
+      database2_seq <- my_sequences$pro_seq;
+      if (verbose > 0) message("db2 extraction is completed")
+    }
+  #190605 add error information
+  if (sum(colnames(data) %in% c("ori.ID")) * sum(colnames(data) %in% c("ENTRY.NAME")) != 1 )
+    stop("data should have column: ori.ID and ENTRY.NAME.")
+
 
   #1.ENTRY.NAME match between data and database1, no matched IDs saved in datano1,match.type is 1
   #delete species information in ENTRY.NAME.
@@ -313,17 +350,44 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
         similar_seq <- as.character(database1_seq[names(database1_seq) %in% id]);
         name <- data_withgn$ori.ID[j];
         ori_seq <- as.character(database2_seq[names(database2_seq) == name]);
+        #remove the unregular amino acid
+        aa <- unlist(Biostrings::strsplit(unname(ori_seq),"")); #190605
+        aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
+                           "K","L","M","N","P","Q","R","S",
+                           "T","V","W","Y")]; #190605
+        aa <- paste0(aa,collapse = "");   #190605
+        ori_seq <- aa;  #190605
         scorem <- 0;
         type2_results <- list();
-        for (k in 1:length(similar_seq)) {
-          scorem[k] <- Biostrings::pairwiseAlignment(as.character(ori_seq),
-                                                     as.character(similar_seq[k]),
-                                                     type = "overlap",
-                                                     substitutionMatrix = "BLOSUM62",
-                                                     gapOpening = 9.5,
-                                                     gapExtension = 0.5,
-                                                     scoreOnly = TRUE);
-        }
+        for (k in 1:length(similar_seq)) {#190605
+          pwalign <- try(Biostrings::pairwiseAlignment(as.character(ori_seq),
+                                                       as.character(similar_seq[k]),
+                                                       type = "overlap",
+                                                       substitutionMatrix = "BLOSUM62",
+                                                       gapOpening = 9.5,
+                                                       gapExtension = 0.5,
+                                                       scoreOnly = TRUE), silent = TRUE);
+          if (class(pwalign) == "try-error") {
+            aa <- unlist(Biostrings::strsplit(unname( as.character(similar_seq[k]) ),""));
+            aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
+                               "K","L","M","N","P","Q","R","S",
+                               "T","V","W","Y")];
+            aa <- paste0(aa,collapse = "")
+            align_seq <- aa;
+            pwalign <- try(Biostrings::pairwiseAlignment(as.character(ori_seq),
+                                                         align_seq,
+                                                         type = "overlap",
+                                                         substitutionMatrix = "BLOSUM62",
+                                                         gapOpening = 9.5,
+                                                         gapExtension = 0.5,
+                                                         scoreOnly = TRUE), silent = TRUE);
+            if (class(pwalign) == "try-error")
+            {pwalign = 0;
+            warning("Please email the warning to the author. Thank you!")
+            }
+          }
+          scorem[k] <- pwalign;
+        }#190605
         type2_results[[name]] <- data.frame(rep(name, length(similar_seq)),
                                             similar_seq,
                                             scorem);
@@ -356,54 +420,120 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
       #if("micropan" %in% rownames(installed.packages()) == FALSE)
       #{install.packages("micropan")}
       #suppressMessages(library("micropan"))
-      log.fil <- file.path(out.folder, "log.txt");
-      db.fil <- file.path(out.folder, "blastDB");
-      command <- paste("makeblastdb -logfile", log.fil,
-                       "-dbtype prot -out", db.fil, "-in", db1.path);
-      setwd(blast.path)
-      system(command)
-      type3_results <- list();
-      for (j in 1:length(data_ori.ID)) {
-        name <- data_ori.ID[j];
-        ori_seq <- as.character(database2_seq[names(database2_seq) == name]);
-        write(ori_seq, file = file.path(out.folder, "input.fasta"));
-        input <- paste( "-query ", file.path(out.folder, "input.fasta"), sep = "" );
-        dbase <- paste( "-db ", db.fil, sep = "" );
-        output <- paste( "-out ",
-                         file.path( out.folder, "blast_result.txt" ),
-                         sep = "" );
-        # command <- paste( "blastp -matrix BLOSUM45 -evalue", 0.001, "-num_threads", 1,
-        #                  "-outfmt 6", input, dbase, output )
-        command <- paste( "blastp -evalue", evalue,
-                          "-outfmt 6", input, dbase, output );
+      if (!Alignment) { #190605
+        log.fil <- file.path(out.folder, "log.txt");
+        db.fil <- file.path(out.folder, "blastDB");
+        command <- paste("makeblastdb -logfile", log.fil,
+                         "-dbtype prot -out", db.fil, "-in", db1.path);
+        setwd(blast.path)
         system(command)
-        if(length(scan(file.path(out.folder, "blast_result.txt"),
-                       what = character(), quiet = TRUE))== 0)
-          ID[j] <- NA
-        else{
-          similar_seq <- read.table(file.path( out.folder, "blast_result.txt" ));
-          similar_seq[,1] <- data_ori.ID[j];
-          type3_results[[name]] <- similar_seq;
-          similar_ID <- as.character(similar_seq[1, 2]);
-          similar_ID <- unlist(strsplit(similar_ID, split = "\\|"));
-          ID[j] <- similar_ID[2];
+        Continue <- TRUE; #190605
+        #190605
+        if ( !file.exists(log.fil) ) {
+          warning("blast.path have no blast+ software.\n");
+          Continue <- FALSE;
+          if (question("Do you want to do ID_match without using blast+ software?"))
+            if(question("It will take large amouts of time. Are you sure?"))
+              Alignment <- TRUE;
+        } else if (!file.exists(paste0(db.fil,".psq"))) {
+          file.remove( log.fil, paste( log.fil, ".perf", sep=""));
+          warning("blast+ software cannot extract db1.bath information.\n")
+          #cat("Please email the error to author. Thank you!\n");
+          #cat("The author Email is liukefu19@163.com\n")
+          stop("Please email the error to author. Thank you!\n The author Email is liukefu19@163.com");
+        }
+        if (Continue) {
+          type3_results <- list();
+          for (j in 1:length(data_ori.ID)) {
+            name <- data_ori.ID[j];
+            ori_seq <- as.character(database2_seq[names(database2_seq) == name]);
+            write(ori_seq, file = file.path(out.folder, "input.fasta"));
+            input <- paste( "-query ", file.path(out.folder, "input.fasta"), sep = "" );
+            dbase <- paste( "-db ", db.fil, sep = "" );
+            output <- paste( "-out ",
+                             file.path( out.folder, "blast_result.txt" ),
+                             sep = "" );
+            # command <- paste( "blastp -matrix BLOSUM45 -evalue", 0.001, "-num_threads", 1,
+            #                  "-outfmt 6", input, dbase, output )
+            command <- paste( "blastp -evalue", evalue,
+                              "-outfmt 6", input, dbase, output );
+            system(command)
+            if(length(scan(file.path(out.folder, "blast_result.txt"),
+                           what = character(), quiet = TRUE))== 0)
+              ID[j] <- NA
+            else{
+              similar_seq <- read.table(file.path( out.folder, "blast_result.txt" ));
+              similar_seq[,1] <- data_ori.ID[j];
+              type3_results[[name]] <- similar_seq;
+              similar_ID <- as.character(similar_seq[1, 2]);
+              similar_ID <- unlist(strsplit(similar_ID, split = "\\|"));
+              ID[j] <- similar_ID[2];
+            }
+          }
+          file.remove( paste( db.fil, ".pin", sep="" ) );
+          file.remove( paste( db.fil, ".phr", sep="" ) );
+          file.remove( paste( db.fil, ".psq", sep="" ) );
+          file.remove( log.fil, paste( log.fil, ".perf", sep=""));
+          file.remove(file.path( out.folder, "input.fasta"),
+                      file.path( out.folder, "blast_result.txt"));
+        }
+      }#190605
+      #190605
+      if (Alignment) {
+        type3_results <- list();
+        for (j in 1:length(data_ori.ID)) {
+          name <- data_ori.ID[j];
+          ori_seq <- as.character(database2_seq[names(database2_seq) == name]);
+          aa <- unlist(Biostrings::strsplit(unname(ori_seq),""));
+          aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
+                             "K","L","M","N","P","Q","R","S",
+                             "T","V","W","Y")];
+          aa <- paste0(aa,collapse = "");
+          ori_seq <- aa;
+          scorem <- 0;
+          for (k in 1:length(database1_seq)) {
+            pwalign <- try(Biostrings::pairwiseAlignment(as.character(ori_seq),
+                                                         as.character(database1_seq[k]),
+                                                         type = "overlap",
+                                                         substitutionMatrix = "BLOSUM62",
+                                                         gapOpening = 9.5,
+                                                         gapExtension = 0.5,
+                                                         scoreOnly = TRUE), silent = TRUE);
+            if (class(pwalign) == "try-error") {
+              aa <- unlist(Biostrings::strsplit(unname(as.character(database1_seq[k])),""));
+              aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
+                                 "K","L","M","N","P","Q","R","S",
+                                 "T","V","W","Y")];
+              aa <- paste0(aa,collapse = "")
+              align_seq <- aa;
+              pwalign <- try(Biostrings::pairwiseAlignment(as.character(ori_seq),
+                                                           align_seq,
+                                                           type = "overlap",
+                                                           substitutionMatrix = "BLOSUM62",
+                                                           gapOpening = 9.5,
+                                                           gapExtension = 0.5,
+                                                           scoreOnly = TRUE), silent = TRUE);
+              if (class(pwalign) == "try-error")
+              {pwalign = 0;
+              warning("Please email the warning to the author. Thank you!")
+              }
+            }
+            scorem[k] <- pwalign;
+          }
+          ID[j] <- names(database1_seq)[which.max(scorem)];
         }
       }
-      file.remove( paste( db.fil, ".pin", sep="" ) );
-      file.remove( paste( db.fil, ".phr", sep="" ) );
-      file.remove( paste( db.fil, ".psq", sep="" ) );
-      file.remove( log.fil, paste( log.fil, ".perf", sep=""));
-      file.remove(file.path( out.folder, "input.fasta"),
-                  file.path( out.folder, "blast_result.txt"));
-      new.ID <- ID;
-      match.type <- "3";
-      datano2 <- data.frame(datano2[,c(-3,-4)],
-                            new.ID,
-                            match.type,
-                            stringsAsFactors = FALSE);
-      #
-      data_IDmatch[is.na(data_IDmatch$new.ID), ] <- datano2;
-      if (verbose > 0) message("seq blast is completed, match.type is 3")
+      if (Alignment | Continue) { #190605
+        new.ID <- ID;
+        match.type <- "3";
+        datano2 <- data.frame(datano2[,c(-3,-4)],
+                              new.ID,
+                              match.type,
+                              stringsAsFactors = FALSE);
+        #
+        data_IDmatch[is.na(data_IDmatch$new.ID), ] <- datano2;
+        if (verbose > 0) message("seq blast is completed, match.type is 3")
+      } else message("match.type 3 is not run.")#190605
     }
   }
   data_IDmatch
@@ -413,41 +543,44 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
 
 #Uniprot database fasta file(type2 suited for human, mouse, Monkey )
 ##version2.0 no factor format
+#190605 add error when the file is not correct.
 .uniprot_database <- function(input_file, type = 1) {
   if (!requireNamespace("Biostrings", quietly = TRUE)) {
     stop("Biostrings in Bioconductor needed for this function to work. Please install it.",
          call. = FALSE)
   }
   # read fasta file
-  my_fasta <- Biostrings::readAAStringSet(input_file);
-  protein_inf <- names(my_fasta);
-  #seperate information based by "|"
-  if (type == 1) {
-    #protein_inf<-unlist(strsplit(protein_inf,split="_HUMAN.*|_MOUSE.*|_MACMU.*|_MACFA.*"))
-    protein_inf <- unlist( strsplit( protein_inf, split = "_.*"))
-    protein_inf <- data.frame(matrix( unlist( strsplit( protein_inf, split="\\|")),
-                                      ncol = 3,byrow = TRUE),
-                              stringsAsFactors = FALSE)
-    names(protein_inf)<- c("status", "Uniprot.ID", "ENTRY-NAME");
-    GN <- gsub(".*GN=(.*) PE=.*", "\\1",
-               as.character(names(my_fasta)), perl = TRUE)
-    GN <- gsub(".*\\|.*", "", GN, perl = TRUE)
-    protein_inf<-data.frame(protein_inf,GN,stringsAsFactors = FALSE);
-  }
-  if(type == 2){
-    protein_inf <- data.frame(matrix(unlist(strsplit(protein_inf, split = "\\|")),
-                                     ncol = 3,byrow = T),
-                              stringsAsFactors = FALSE);
-    names(protein_inf) <- c("status", "Uniprot.ID", "ENTRY-NAME");
-    #extract entryname and GN
-    entryname <- gsub("(.*_HUMAN).*|(.*_MOUSE).*|(.*_MACMU).*|(.*_MACFA).*",
-                    "\\1\\2", as.character(protein_inf[,3]), perl = TRUE);
-    GN <- gsub(".*GN=(.*) PE=.*", "\\1",
-               as.character(protein_inf[ ,3]), perl = TRUE);
-    protein_inf[ ,3] <- entryname;
-    protein_inf <- data.frame(protein_inf, GN, stringsAsFactors = FALSE);
-  }
-  my_id_sequence <- Biostrings::readAAStringSet(input_file);
-  names(my_id_sequence) <- as.character(protein_inf$Uniprot.ID);
-  list(pro_info = protein_inf, pro_seq = my_id_sequence);
+  my_fasta <- try(Biostrings::readAAStringSet(input_file), silent = TRUE); #190605
+  if(class(my_fasta) != "try-error") { #190605
+    protein_inf <- names(my_fasta);
+    #seperate information based by "|"
+    if (type == 1) {
+      #protein_inf<-unlist(strsplit(protein_inf,split="_HUMAN.*|_MOUSE.*|_MACMU.*|_MACFA.*"))
+      protein_inf <- unlist( strsplit( protein_inf, split = "_.*"))
+      protein_inf <- data.frame(matrix( unlist( strsplit( protein_inf, split="\\|")),
+                                        ncol = 3,byrow = TRUE),
+                                stringsAsFactors = FALSE)
+      names(protein_inf)<- c("status", "Uniprot.ID", "ENTRY-NAME");
+      GN <- gsub(".*GN=(.*) PE=.*", "\\1",
+                 as.character(names(my_fasta)), perl = TRUE)
+      GN <- gsub(".*\\|.*", "", GN, perl = TRUE)
+      protein_inf<-data.frame(protein_inf,GN,stringsAsFactors = FALSE);
+    }
+    if(type == 2){
+      protein_inf <- data.frame(matrix(unlist(strsplit(protein_inf, split = "\\|")),
+                                       ncol = 3,byrow = T),
+                                stringsAsFactors = FALSE);
+      names(protein_inf) <- c("status", "Uniprot.ID", "ENTRY-NAME");
+      #extract entryname and GN
+      entryname <- gsub("(.*_HUMAN).*|(.*_MOUSE).*|(.*_MACMU).*|(.*_MACFA).*",
+                        "\\1\\2", as.character(protein_inf[,3]), perl = TRUE);
+      GN <- gsub(".*GN=(.*) PE=.*", "\\1",
+                 as.character(protein_inf[ ,3]), perl = TRUE);
+      protein_inf[ ,3] <- entryname;
+      protein_inf <- data.frame(protein_inf, GN, stringsAsFactors = FALSE);
+    }
+    my_id_sequence <- Biostrings::readAAStringSet(input_file);
+    names(my_id_sequence) <- as.character(protein_inf$Uniprot.ID);
+    list(pro_info = protein_inf, pro_seq = my_id_sequence);
+  } else my_fasta; #190605
 }

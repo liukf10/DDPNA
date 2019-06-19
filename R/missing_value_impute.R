@@ -344,7 +344,7 @@ Data_impute <- function(data, inf = "inf", intensity = "LFQ", miss.value = NA,
 
 
 
-
+#190615 fix a bug when doclust, it will error use the previous function
 .OutlierDetect <- function(data, iteration = NA, outlierdata = "intensity",
                            distmethod = "manhattan", A.IAC = FALSE,
                            miss.value = NA, sdout = 2,
@@ -419,6 +419,7 @@ Data_impute <- function(data, inf = "inf", intensity = "LFQ", miss.value = NA,
     outlier <- c(outlier, out_name);
     if (outliersample > 0) {
       data$intensity <- data$intensity[ ,-out_pos];
+      treelabels <- treelabels[-out_pos];#190615
       data$inf <- data$inf[ ,-which(colnames(data$inf) == "NA_num")];
       data <- .NAnum.proteomic_data(data, miss.value = miss.value);
       data <- .deNA2.proteomic_data(data, trunc(0.5*ncol(data$intensity)));

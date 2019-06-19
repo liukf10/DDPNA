@@ -5,7 +5,7 @@
 Module_Enrich
 }
 \description{
-Enrichment analysis of a sets of proteins in all modules.
+Enrichment analysis of a sets of proteins in all modules. The function offered two enrichment methods:ORA and FCS.
 }
 \usage{
 Module_Enrich(module, classifiedID, enrichtype = "FCS",
@@ -39,6 +39,18 @@ it can seen in \code{p.adjust.methods}.
 }
 }
 
+\value{
+a list contains classifiedID enrichment information.
+  \item{Counts }{the counts of classifiedID in module.}
+  \item{module.size }{the number of module ID}
+  \item{module.name }{module name}
+  \item{precent }{counts divided module.size }
+  \item{p }{enrichment p value in each module}
+  \item{p.adj }{enrichment p.adj value in each module}
+  \item{Z.score }{Z score is -log2 P value.}
+%% ...
+}
+
 \author{
 Kefu Liu
 }
@@ -46,8 +58,6 @@ Kefu Liu
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(net)
 data(imputedData)
 data <- imputedData

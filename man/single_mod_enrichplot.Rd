@@ -49,8 +49,6 @@ Kefu Liu
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(net)
 data(imputedData)
 data <- imputedData

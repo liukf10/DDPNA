@@ -4,8 +4,8 @@
 exportPattern("^[^\\.]")
 
 
-importFrom(MEGENA, calculate.PFN, get.DegreeHubStatistic)
-importFrom(igraph, graph.data.frame, induced.subgraph)
+importFrom(MEGENA, calculate.PFN, get.DegreeHubStatistic, plot_subgraph)
+importFrom(igraph, graph.data.frame, induced.subgraph, as_data_frame)
 importFrom(ggalt, geom_xspline)
 import(ggplot2)
 import(stats)
@@ -15,6 +15,7 @@ import(grDevices)
 import(plyr)
 import(scales)
 import(grid)
+importFrom(VennDiagram, get.venn.partitions)
 #importFrom("graphics", "abline", "lines", "plot", "text")
 #  importFrom("stats", "aov", "as.dist", "cor", "hclust", "oneway.test",
 #             "p.adjust", "p.adjust.methods", "pairwise.t.test", "phyper",

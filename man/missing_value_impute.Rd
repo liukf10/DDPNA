@@ -116,8 +116,6 @@ Kefu Liu
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(Dforimpute)
 data <- Data_impute(Dforimpute,distmethod="manhattan")
 }

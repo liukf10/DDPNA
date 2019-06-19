@@ -40,7 +40,16 @@ a numberic value indicated that hub proteins are p value less than hub.p.
 }
 }
 
+\value{
+a list contains PMFG network information.
+list(hub = hubgene, degreeStat = Stat, graph = g, PMFG = gg)
+  \item{hub }{ hub information.}
+  \item{degreeStat }{degree statistics information}
+  \item{graph }{the original graph data frame  }
+  \item{PMFG }{PMFG graph data frame }
 
+%% ...
+}
 
 \author{
 Kefu Liu
@@ -49,8 +58,6 @@ Kefu Liu
 
 
 \examples{
-rm(list = ls())
-library(DDPNA)
 data(net)
 data(imputedData)
 data <- imputedData

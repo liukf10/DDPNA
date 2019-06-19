@@ -37,7 +37,9 @@ Other arguments.
 \details{
 extract significant differential protein ID based on foldchange, t.test p value, anova p value.
 }
-
+\value{
+a vector of protein ID information.
+}
 \author{
 Kefu Liu
 }
@@ -45,9 +47,6 @@ Kefu Liu
 
 
 \examples{
-rm(list = ls())
-
-library(DDPNA)
 data(imputedData)
 data <- imputedData
 logD <- data$log2_value
@@ -56,6 +55,5 @@ group <- gsub("[0-9]+","", colnames(logD))
 up <- changedID(logD, group, vs.set2 = "ad", vs.set1 = "ctl",
               rank = "foldchange",anova = FALSE, Padj = "none", cutoff = 1,
               datatype = "log2", fctype = "up")
-
 
 }
