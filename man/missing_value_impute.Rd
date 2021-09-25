@@ -5,7 +5,13 @@
 Data_impute
 }
 \description{
-detect and remove outlier sample and  impute missing value.
+data clean process: detect and remove outlier sample and impute missing value.
+The process is following:
+1. Remove some genes which the number of missing value larger than maxNAratio.
+2. Outlier sample detect and remove these sample.
+3. Repeat Steps 1-2 untile meet the iteration times or no outlier sample can be detected.
+4. impute the missing value.
+The function also can only do gene filter or remove outlier or impute missing value.
 }
 \usage{
 Data_impute(data, inf = "inf", intensity = "LFQ", miss.value = NA,
@@ -43,6 +49,7 @@ Data_impute(data, inf = "inf", intensity = "LFQ", miss.value = NA,
   a logical value indicated whether remove outlier sample.
   }
   \item{outlierdata}{
+  The value is deprecated.
   which data will be used to analysis outlier sample detect.This must be (an abbreviation of) one of the strings "\code{intensity}","\code{relative_value}","\code{log2_value}".
   }
   \item{iteration}{

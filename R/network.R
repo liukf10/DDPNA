@@ -3,9 +3,10 @@
 #allow extract 2 or more Modules to as a big net
 #the previous code will show the wrong result when extract 2 or more Modules
 #190612 fix the error when PFG is not the whole mod.name
-
+#200327 fix the bug occur in 190612 added function.
+#20200610 add correlaton adjust P
 getmoduleHub <- function(data, module, mod_num, coln = "new.ID",
-                         cor.sig = 0.05, cor.r = 0,
+                         cor.sig = 0.05, cor.r = 0, cor.adj="none",
                          adjustp = TRUE, hub.p = 0.05){
   #mod.name <- module[module$moduleNum == mod_num, coln];
   mod.name <- module[module$moduleNum %in% mod_num, coln]; #190604
@@ -17,7 +18,7 @@ getmoduleHub <- function(data, module, mod_num, coln = "new.ID",
   #library("Hmisc")
   cor_matrix <- Hmisc::rcorr(mod, type = "pearson");
   #
-  cor_matrix_sig <- .sig_cor(cor_matrix, p = cor.sig, r = cor.r, type = 1);
+  cor_matrix_sig <- .sig_cor(cor_matrix, p = cor.sig, r = cor.r, type = 1,padjust=cor.adj);
   cor_order <- .orderCor(abs(cor_matrix_sig$r), cor_matrix_sig$P);
 
   # make igraph objects
@@ -29,8 +30,8 @@ getmoduleHub <- function(data, module, mod_num, coln = "new.ID",
   el <- calculate.PFN(cor_order[,1:3], doPar = FALSE, num.cores = 1);
   gg <- graph.data.frame(el, directed = FALSE);
   #plot(gg)
-  mod.name.net <- c(el[,1], el[,2]); #190612
-  mod.name.net <- mod.name.net[!duplicated(mod.name.net)]; #190612
+  mod.name.net <- unique(c(as.character(el[, 1]),as.character(el[, 2])));#200327
+  #factor format, it may get wrong result #mod.name.net <- c(el[,1], el[,2]);mod.name.net <- mod.name.net[!duplicated(mod.name.net)]; #190612
   subnet <- induced.subgraph(gg, mod.name.net); #190612
   #subnet <- induced.subgraph(gg, mod.name);
   Stat <- get.DegreeHubStatistic(subnet, n.perm = 100);
@@ -174,6 +175,7 @@ DEPsets <- function(datalist,colors = c("red","green","blue")){
 #190611 add value BranchCut, a logical value indicating whether remove proteins
 #which have no connection to DEPs.
 # 190611 fix a bug that the proteins only choose el$from when reconstructNet.
+#20200327 when no reconstructNet and no change when do removehub and branchcut, only plot one time.
 DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                              data = NULL, module = NULL,
                              plot = TRUE,
@@ -202,7 +204,7 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                               layout = "kamada.kawai"), silent = TRUE)
     if (class(test) == "try-error")
       stop("plot_subgraph is error. Please check ModNet.")
-    netgene = ModNet$degreeStat$gene;
+    modulegene = ModNet$degreeStat$gene; #200802
     hub = ModNet$hub;
     PMFG = ModNet$PMFG;
     #cat("No IDsets, it will only plot the module network.");
@@ -219,10 +221,9 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                            label.scaleFactor = 10,
                            layout = "kamada.kawai")
       if (is.character(filename) & length(filename) == 1) {
-        if (!dir.exists("plot"))
-          dir.create("plot")
-        filename2 = paste0("plot/DEP_Mod_net", filename, "_ori",
-                           ".", filetype)
+        #if (!dir.exists("plot")) dir.create("plot")
+        #filename2 = paste0("plot/DEP_Mod_net", filename, "_ori",".", filetype)
+        filename2 = paste0("DEPModNet_", filename,"_ori", ".", filetype) #200703
         ggsave(pic$pnet, filename = filename2, ...)
         unlink(pic$pnet)
       }
@@ -260,10 +261,9 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                            label.scaleFactor = 10,
                            layout = "kamada.kawai")
       if (is.character(filename) & length(filename) == 1) {
-        if (!dir.exists("plot"))
-          dir.create("plot")
-        filename2 = paste0("plot/DEP_Mod_net", filename, "_ori",
-                           ".", filetype)
+        #if (!dir.exists("plot")) dir.create("plot")
+        #filename2 = paste0("plot/DEP_Mod_net", filename, "_ori", ".", filetype)
+        filename2 = paste0("DEPModNet_", filename,"_ori", ".", filetype) #200703
         ggsave(pic$pnet, filename = filename2, ...)
         unlink(pic$pnet)
       }
@@ -271,8 +271,7 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
     }
     #not reconstrunction PFG and replot
     #IDs in DEPsets which have no any connection will not showed in picture
-    if (!reconstructNet)
-    {
+    if (!reconstructNet) {
       node.features<- plot_subgraph(module = ModNet$degreeStat$gene,
                                     hub = ModNet$hub, PFN = ModNet$PMFG,
                                     node.default.color = "grey",
@@ -291,15 +290,17 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
       el <- as_data_frame(ModNet$PMFG);
       el2 <- el[!(el[,1] %in% removedHub | el[,2]  %in% removedHub), ];
       if (BranchCut) {
-        markedID<- as.character(node.features$id[node.features$node.stat !="NA"])
+        markedID <- as.character(node.features$id[node.features$node.stat !="NA"])
         el2 <- el2[el2$from %in% markedID | el2$to %in% markedID, ]
       }
       PMFG <- graph.data.frame(el2, directed = FALSE);
       hubs <- ModNet$hub[!ModNet$hub %in% removedHub];
-      modulegene <- c(as.character(el2[,1]),as.character(el2[,2]))
-      modulegene <- as.factor(modulegene);
-      modulegene <- levels(modulegene);
-      if (plot | OnlyPlotLast) {
+      modulegene <- unique(c(as.character(el2[,1]),as.character(el2[,2])));#20200327
+      #modulegene <- as.factor(modulegene); modulegene <- levels(modulegene);
+      if (length(removedHub) == 0 )
+        warning("all Hubs ID belong IDsets.")
+      if(nrow(el2) == nrow(el) & plot) OnlyPlotLast = plot = FALSE;#20200327
+      if (plot | OnlyPlotLast ) {
         pic <- plot_subgraph(module = modulegene,
                              hub = hubs, PFN = PMFG,
                              node.default.color = node.default.color,
@@ -313,24 +314,19 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                              label.scaleFactor = 10,
                              layout = "kamada.kawai")
         if (is.character(filename) & length(filename) == 1) {
-          if (!dir.exists("plot"))
-            dir.create("plot")
-          filename2 = paste0("plot/DEP_Mod_net", filename, "_new",
-                             ".", filetype)
+          #if (!dir.exists("plot")) dir.create("plot")
+          #filename2 = paste0("plot/DEP_Mod_net", filename, "_new", ".", filetype)
+          filename2 = paste0("DEPModNet_", filename,"_new", ".", filetype) #200703
           ggsave(pic$pnet, filename = filename2, ...)
           unlink(pic$pnet)
         }
         else print(pic$pnet)
       }
-      if (length(removedHub) == 0 )
-        warning("all Hubs ID belong IDsets.")
-
     }
     #reconstrunction PFG and replot
     #remove unDEPsets hubs ID and related unDEPsets ID.
     #the function can run a cycle until no unDEPsets hubs.
-    if (reconstructNet)
-    {
+    if (reconstructNet) {
       node.features<- plot_subgraph(module = ModNet$degreeStat$gene,
                                     hub = ModNet$hub, PFN = ModNet$PMFG,
                                     node.default.color = node.default.color,
@@ -393,10 +389,9 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                                  label.scaleFactor = 10,
                                  layout = "kamada.kawai");
             if (is.character(filename) & length(filename) == 1) {
-              if (!dir.exists("plot"))
-                dir.create("plot")
-              filename2 = paste0("plot/DEP_Mod_net", filename, "_",iter,
-                                 ".", filetype)
+              #if (!dir.exists("plot")) dir.create("plot")
+              #filename2 = paste0("plot/DEP_Mod_net", filename, "_",iter, ".", filetype)
+              filename2 = paste0("DEPModNet_", filename,"_",iter, ".", filetype) #200703
               ggsave(pic$pnet, filename = filename2, ...)
               unlink(pic$pnet)
             }
@@ -462,10 +457,9 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                                  label.scaleFactor = 10,
                                  layout = "kamada.kawai");
             if (is.character(filename) & length(filename) == 1) {
-              if (!dir.exists("plot"))
-                dir.create("plot")
-              filename2 = paste0("plot/DEP_Mod_net", filename, "_",iter,
-                                 ".", filetype)
+              #if (!dir.exists("plot")) dir.create("plot")
+              #filename2 = paste0("plot/DEP_Mod_net", filename, "_",iter, ".", filetype)
+              filename2 = paste0("DEPModNet_", filename,"_",iter, ".", filetype) #200703
               ggsave(pic$pnet, filename = filename2, ...)
               unlink(pic$pnet)
             }
@@ -489,10 +483,9 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
                              label.scaleFactor = 10,
                              layout = "kamada.kawai")
         if (is.character(filename) & length(filename) == 1) {
-          if (!dir.exists("plot"))
-            dir.create("plot")
-          filename2 = paste0("plot/DEP_Mod_net", filename, "_",iter,
-                             ".", filetype)
+          #if (!dir.exists("plot")) dir.create("plot")
+          #filename2 = paste0("plot/DEP_Mod_net", filename, "_",iter, ".", filetype)
+          filename2 = paste0("DEPModNet_", filename,"_",iter, ".", filetype) #200703
           ggsave(pic$pnet, filename = filename2, ...)
           unlink(pic$pnet)
         }
@@ -515,10 +508,13 @@ DEP_Mod_net_plot <- function(ModNet, IDsets = NULL,
 
 ##extract correlation
 #P 0.05,0.01,0.001  r  0.1,0.3,0.5,0.8
-.sig_cor <- function(cor_matrix, p = 0.05, r = NA, type = 1){
+#add p adjust
+.sig_cor <- function(cor_matrix, p = 0.05, r = NA, type = 1,padjust="none"){
   #lower.tri
   cor_matrix$P[upper.tri(cor_matrix$P,diag = TRUE)] <- NA;
   cor_matrix$r[upper.tri(cor_matrix$P,diag = TRUE)] <- NA;
+  cor_matrix$P <- matrix(p.adjust(cor_matrix$P,method = padjust),
+                         ncol = nrow(cor_matrix$P),nrow = nrow(cor_matrix$P));#20200610
   #order
   #rank_r<-matrix(rank(1-abs(cor_matrix$r)),nrow=nrow(cor_matrix$r));
   #rank_p<-matrix(rank(abs(cor_matrix$P)),nrow=nrow(cor_matrix$P));

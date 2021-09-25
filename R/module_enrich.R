@@ -9,9 +9,12 @@ Module_Enrich <- function(module, classifiedID, enrichtype = "FCS",
   mod.name = NULL; pvalue = NULL; precentage = NULL;
   fcnum = NULL; modnum = NULL; Z = NULL;
   moduleNum <- module$moduleNum; #190607
-  module$moduleNum <- as.character(module$moduleNum);#190607
-  moduleName <- levels(as.factor(module$moduleNum));#190607
-  if (is.numeric(moduleNum)) moduleName <- as.numeric(moduleName);#190607
+  if (is.numeric(moduleNum))  #191105
+    moduleName <- levels(as.factor(module$moduleNum)) else {
+      module$moduleNum <- as.character(module$moduleNum);#190607
+      moduleName <- levels(as.factor(module$moduleNum));#190607
+    }
+  # if (is.numeric(moduleNum)) moduleName <- as.numeric(moduleName);#190607
   im <- length(moduleName);#190607
   #im <- length(table(module$moduleNum));
   classifiedID <- classifiedID[!duplicated(classifiedID)] #20190512
@@ -126,8 +129,9 @@ single_mod_enrichplot <- function(module, Mod_Nam, classifiedID,
     #spline interpolation
     sp1 = spline(x, Z, n=3*length(classifiedID), ...);
     if (is.character(filename) & length(filename) == 1){
-      if (!dir.exists("plot")) dir.create("plot");
-      pdf(paste0("plot/ module", Mod_Nam, " enrichment ", filename, ".pdf"))
+      #if (!dir.exists("plot")) dir.create("plot");
+      #pdf(paste0("plot/ module", Mod_Nam, " enrichment ", filename, ".pdf"))
+      pdf(paste0("module", Mod_Nam, "_enrichment_", filename, ".pdf")) #200703
     }
     plot(x, Z, type = "p", pch=20, ylab="Z score", xlab = "",
          main = paste("module", Mod_Nam, "enrichment analysis"));

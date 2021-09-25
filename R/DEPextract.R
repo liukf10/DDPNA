@@ -35,8 +35,9 @@ modpcomp <- function(data, colors, nPC = 2,
           theme_bw();}
       if ( all(class(pic)!="try-error") ) {
         if (is.character(filename) & length(filename) == 1){
-          if (!dir.exists("plot")) dir.create("plot");
-          pdf(paste0("plot/", filename, " PCA plot mod", i, ".pdf"))
+          #if (!dir.exists("plot")) dir.create("plot");
+          #pdf(paste0("plot/", filename, " PCA plot mod", i, ".pdf"))
+          pdf(paste0(filename, "_PCA_mod", i, ".pdf")) #200703
           dev.off()
         } else print(pic)
       }
@@ -46,6 +47,7 @@ modpcomp <- function(data, colors, nPC = 2,
 }
 
 
+#20190730 fix when some group only have no duplication, it will error before.
 groupmean <- function(data, group, method = c("mean","median"), name = TRUE){
   if (length(group) != ncol(data))
     stop ("Group length and data col length is not the same.");
@@ -55,7 +57,10 @@ groupmean <- function(data, group, method = c("mean","median"), name = TRUE){
   met <- match.fun(method);
   for(i in 1:nlevels(group)){
     pos <- which(group == levels(group)[i]);
-    mean <- apply(data[ , pos], 1, met, na.rm = T); #20190514
+    if (length(pos) > 1) { #20190730
+      mean <- apply(data[ , pos], 1, met, na.rm = TRUE); #20190514
+    }
+    if (length(pos) == 1) mean <- data[ , pos]; #20190730
     if (is.null(mean.matrix)) mean.matrix <- data.frame(mean)
     else mean.matrix <- data.frame(mean.matrix, mean);
     if(name) colnames(mean.matrix)[i] <- paste0(levels(group)[i], method)
@@ -339,6 +344,7 @@ changedID <- function(relative_value, group, vs.set2, vs.set1 = "WT",
 #v0.2.1
 #190605
 #extract stat inf
+#190715 fix when ID have "-"
 dataStatInf <- function(prodata,  group, intensity = "intensity", Egrp = NULL, Cgrp = "ctl",
                         meanmethod = "mean", datatype = c("none", "log2"),
                         anova = TRUE, T.test = c("pairwise","student", "none"),
@@ -402,6 +408,8 @@ dataStatInf <- function(prodata,  group, intensity = "intensity", Egrp = NULL, C
   }
   if (T.test == "pairwise") {
     ttestP <- multi.t.test(data, group, sig = 1, geneAdj = Tadj, ...);
+    if(!all(rownames(ttestP) %in% rownames(data))) rownames(ttestP) <- gsub("(.*)\\.([0-9])","\\1-\\2",rownames(ttestP)) #190715
+    if(!all(rownames(ttestP) %in% rownames(data))) stop("error in multi.t.test function.")#190715
     P <- matrix(data = NA, nrow = nrow(data), ncol = ncol(ttestP),
                 dimnames = list(rownames(data), colnames(ttestP)));
     P[rownames(P) %in% rownames(ttestP), ] <- ttestP;
@@ -412,7 +420,8 @@ dataStatInf <- function(prodata,  group, intensity = "intensity", Egrp = NULL, C
     Ttestx <- which(group == Cgrp);
     Ttesty <- which(group == Egrp);
     dataforTtest <- data[, c(Ttestx, Ttesty)];
-    ttestP <- StudentT(dataforTtest, group, Padj = "none");
+    #ttestP <- StudentT(dataforTtest, group, Padj = "none");
+    ttestP <- StudentT(dataforTtest, group[c(Ttestx, Ttesty)], Padj = "none");#190715
     ttestPadj <- p.adjust(ttestP, method = Tadj);
     ttestP <- cbind(ttestP =ttestP,
                     ttestPadj = if(Tadj != "none") ttestPadj);

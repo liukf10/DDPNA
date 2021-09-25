@@ -53,11 +53,11 @@ logD <- data$log2_value
 rownames(logD) <- data$inf$ori.ID
 group <- gsub("[0-9]+","", colnames(logD))
 Module <- Module_inf(net, data$inf)
-pos<-which(Module$moduleNum \%in\% c(11:22))
-up <- changedID(logD[-pos,], group, vs.set2 = "ad",vs.set1 = "ctl",
+pos<-which(Module$moduleNum \%in\% c(11:13))
+up <- changedID(logD[pos,], group, vs.set2 = "ad",vs.set1 = "ctl",
               rank = "foldchange",anova = FALSE, Padj = "none",cutoff = 1,
               datatype = "log2",fctype = "up")
-FCSenrich <- Module_Enrich(Module[-pos,], up, coln="ori.ID")
+FCSenrich <- Module_Enrich(Module[pos,], up, coln="ori.ID")
 FCSenrich <- FCSenrichplot(FCSenrich)
 
 }

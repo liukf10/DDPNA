@@ -8,13 +8,16 @@ DEP_Mod_HeatMap
  get the DEP enrich fold in Module and plot a HeatMap
 }
 \usage{
-DEP_Mod_HeatMap(DEP_Mod, filter = c("p", "p.adj"),
+DEP_Mod_HeatMap(DEP_Mod, xlab = "DEP", filter = c("p","p.adj"),
                 cutoff = 0.05, filename = NULL, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{DEP_Mod}{
   a list of DEP_Mod enrichment information. data.frame in list is get from \code{Module_Enrich} function.
+}
+\item{xlab}{
+  it indicate x value in heatmap. it must be a value between "\code{DEP}" and "\code{MOD}".
 }
   \item{filter}{
   p value or p.adjust value used to filter the enrich significant module.

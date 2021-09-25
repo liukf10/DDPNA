@@ -11,8 +11,9 @@ SoftThresholdScaleGraph <- function(data,
   sft <- WGCNA::pickSoftThreshold(data);
   powers <- c(c(1:10), seq(from = 12, to = 20, by = 2));
   if (is.character(filename) & length(filename) == 1){
-    if (!dir.exists("plot")) dir.create("plot");
-    pdf(paste0("plot/", "SoftThershold ", filename, ".pdf"))
+    #if (!dir.exists("plot")) dir.create("plot");
+    #pdf(paste0("plot/", "SoftThershold ", filename, ".pdf"))
+    pdf(paste0( "SoftThershold ", filename, ".pdf")) #200703
   }
   plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[ ,2],
        xlab = xlab, ylab = ylab, type = "n",

@@ -20,7 +20,7 @@ MaxQdataconvert <- function(pgfilename, IDname = "Majority.protein.IDs",
     inf <- try(P.G.extract(data$protein_IDs, justID = justID,
                            status1 = status1, ENTRY1 = ENTRY1,
                            verbose = verbose-1));
-    if (class(inf) != "try-error") {
+    if (!any(class(inf) %in% "try-error")) { #200627 200804
       inf <- data.frame(inf[ ,1:3], stringsAsFactors = FALSE);
       colnames(inf) <- c("db.type", "ori.ID", "ENTRY.NAME");
       NEXTtoIDmatch = TRUE;
@@ -59,15 +59,6 @@ MaxQdataconvert <- function(pgfilename, IDname = "Majority.protein.IDs",
       }
     }
   }
-
-  if(1!=1)
-  {if (is.null(db1.path) | is.null(db2.path) | is.null(out.folder) | is.null(blast.path)) {
-    warning("Break short. ID match is not execute.");
-    NEXTtoIDmatch = FALSE;
-  } else if (file.exists(db1.path) & file.exists(db2.path) &  dir.exists(blast.path)) {
-    warning("Break short. ID match is not execute.");
-    NEXTtoIDmatch = FALSE;
-  }}
 
   if (NEXTtoIDmatch) {
     data_match <- try(ID_match(data = inf,
@@ -211,6 +202,7 @@ P.G.extract <- function(inf, ncol = 4,
 #evalue lower means more rigorous;verbose:0 no verbose:1 have
 #190601 reset the default working directory
 #190605 add alternative solution without use blast+
+#200602 fix a bug in step 2
 
 #db1.path="c:/workingdirectory/human-uniprot-20180108.fasta"
 #db2.path="c:/workingdirectory/mouse-uniprot-20180108.fasta"
@@ -247,21 +239,21 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
   #db1.folder <- gsub(paste0("(",out.folder,").*"), "\\1", db1.path);
   if (all(out.folder != db1.folder)) stop ("db1.path is not in the out.folder");
   Alignment = FALSE; #190605
+  Continue = TRUE; #200626
   #190605
   if (is.null(blast.path)) {
-    message("blast.path is null.\n");
+    message("blast.path is null.\n Use pairwiseAlignment function, it will take lots of time.");
+    Alignment <- TRUE; #200626 remove the question function
     #cat("blast.path is null.\n");
-    if (question("Do you want to do ID_match without using blast+ software?"))
-      {if(question("It will take large amouts of time.  Are you sure?"))
-        Alignment <- TRUE else stop("Please give the blast.path and re-run the function.");}
-    else stop("Please give the blast.path and re-run the function.");
   } else if (!dir.exists(blast.path)) {
     message("blast.path is not exists.\n");
     #cat("blast.path is not exists.\n");
     if (question("Do you want to do ID_match without using blast+ software?"))
       {if(question("It will take large amouts of time. Are you sure?"))
         Alignment <- TRUE else stop("Please give the correct blast.path and re-run the function.");
-    } else stop("Please give the correct blast.path and re-run the function.");
+    } else { if (question("Continue to run?"))
+      Continue = FALSE else stop("Please give the correct blast.path and re-run the function.");
+    }#200626
   }#190605
   my_sequences <- .uniprot_database(input_file = db1.path);
   if(class(my_sequences) == "try-error") #190605
@@ -313,7 +305,7 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
     data_withgn <- merge(datano1, database2[ ,c('Uniprot.ID', 'GN')],
                        by.x = 'ori.ID',by.y = 'Uniprot.ID',sort = FALSE);
     nogn <- which(data_withgn$GN == "") #181210
-    data_withgn <- data_withgn[-nogn, ] #181210
+    if(length(nogn) != 0 ) data_withgn <- data_withgn[-nogn, ] #181210 #200602
     # extract GN information
     data_GN <- gsub("(.*)","^\\1", as.character(data_withgn$GN), perl = TRUE);
     #limitation maxium matched protein ID number is 14
@@ -325,7 +317,8 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
     {
       gn <- NULL;
       ##maxium delete character:4
-      max <- nchar(data_GN[j]);
+      data_GN[j] <- gsub("\\(|\\)|\\.|\\*|\\[|\\]|\\{|\\}|/","",data_GN[j]) #210528 remove regexp meta char
+      max <- nchar(data_GN[j],type = "width"); #210528 fixed        #max <- nchar(data_GN[j]);
       for (i in 1:5)
       {
         ##match first, if no then delete character
@@ -351,7 +344,7 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
         name <- data_withgn$ori.ID[j];
         ori_seq <- as.character(database2_seq[names(database2_seq) == name]);
         #remove the unregular amino acid
-        aa <- unlist(Biostrings::strsplit(unname(ori_seq),"")); #190605
+        aa <- unlist(strsplit(unname(ori_seq),"")); #190605 #200626 use base::strsplit instead of Biostrings::strsplit
         aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
                            "K","L","M","N","P","Q","R","S",
                            "T","V","W","Y")]; #190605
@@ -368,7 +361,7 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
                                                        gapExtension = 0.5,
                                                        scoreOnly = TRUE), silent = TRUE);
           if (class(pwalign) == "try-error") {
-            aa <- unlist(Biostrings::strsplit(unname( as.character(similar_seq[k]) ),""));
+            aa <- unlist(strsplit(unname( as.character(similar_seq[k]) ),"")); #200626
             aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
                                "K","L","M","N","P","Q","R","S",
                                "T","V","W","Y")];
@@ -420,7 +413,7 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
       #if("micropan" %in% rownames(installed.packages()) == FALSE)
       #{install.packages("micropan")}
       #suppressMessages(library("micropan"))
-      if (!Alignment) { #190605
+      if (!Alignment & Continue) { #190605
         log.fil <- file.path(out.folder, "log.txt");
         db.fil <- file.path(out.folder, "blastDB");
         command <- paste("makeblastdb -logfile", log.fil,
@@ -480,11 +473,12 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
       }#190605
       #190605
       if (Alignment) {
+        Continue = FALSE; #200626
         type3_results <- list();
         for (j in 1:length(data_ori.ID)) {
           name <- data_ori.ID[j];
           ori_seq <- as.character(database2_seq[names(database2_seq) == name]);
-          aa <- unlist(Biostrings::strsplit(unname(ori_seq),""));
+          aa <- unlist(strsplit(unname(ori_seq),"")); #200626
           aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
                              "K","L","M","N","P","Q","R","S",
                              "T","V","W","Y")];
@@ -500,7 +494,7 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
                                                          gapExtension = 0.5,
                                                          scoreOnly = TRUE), silent = TRUE);
             if (class(pwalign) == "try-error") {
-              aa <- unlist(Biostrings::strsplit(unname(as.character(database1_seq[k])),""));
+              aa <- unlist(strsplit(unname(as.character(database1_seq[k])),"")); #200626
               aa <- aa[aa %in% c("A","C","D","E","F","G","H","I",
                                  "K","L","M","N","P","Q","R","S",
                                  "T","V","W","Y")];
@@ -568,7 +562,7 @@ ID_match <- function(data, db1.path = NULL, db2.path = NULL,
     }
     if(type == 2){
       protein_inf <- data.frame(matrix(unlist(strsplit(protein_inf, split = "\\|")),
-                                       ncol = 3,byrow = T),
+                                       ncol = 3,byrow = TRUE),
                                 stringsAsFactors = FALSE);
       names(protein_inf) <- c("status", "Uniprot.ID", "ENTRY-NAME");
       #extract entryname and GN

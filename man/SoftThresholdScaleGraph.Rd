@@ -54,6 +54,8 @@ Kefu Liu
 \code{pickSoftThreshold} in WGCNA package.
 }
 \examples{
+\donttest{
+#it will take some times
 data(imputedData)
 data <- imputedData
 logD <- data$log2_value
@@ -62,5 +64,5 @@ if (requireNamespace("WGCNA", quietly = TRUE))
   sft <- SoftThresholdScaleGraph(t(logD))
 
 }
-
+}
 

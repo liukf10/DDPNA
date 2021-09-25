@@ -12,10 +12,11 @@ The function \code{Data_impute} need \pkg{impute} package from Bioconductor, the
 }
 \details{
 \tabular{ll}{
-Package: \tab DHMDA\cr
+Package: \tab DDPNA\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2019-03-18\cr
+Version: \tab 0.2.5\cr
+Creat Data: \tab 2019-03-18\cr
+Date: \tab 2020-06-26\cr
 License: \tab GPL (>= 2)\cr
 }
 ~~ An overview of how to use the package, including the most important ~~

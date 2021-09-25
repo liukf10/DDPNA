@@ -17,9 +17,9 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-DDPNA is a package for Disease-Drived Differential Proteins(DFP) and Proteome-Wide Co-expression Network Associated Analysis. The goal of DDPNA is offered a better methods to analyze omic data. The package is designed for proteomic data, but it is also fit for expression data in RNA-seq and metabolome. 
-It is associated DFP and co-expression network module, and constructed a Mod-DFP network to remove lower connectivity DFP. The lower connectivity DFP is hard to get the key function in PPI and is more likely a false postive protein. The Mod-DFP network can also get DFP related proteins which is more likely a false negative protein. 
-It provides the essential statisic analysis included t.test, ANOVA analysis to extract differential proteins. The package also provide some module analysis included PCA analysis, two enrichment analysis, Planner maximally filtered graph extraction and hub analysis. The co-expression network should constructed by other package or software.(WGCNA package or others) 
+'DDPNA' is a package for Disease-Drived Differential Proteins(DEP) and Proteome-Wide Co-expression Network Associated Analysis. The goal of 'DDPNA' is offered a better methods to analyze omic data. The package is designed for proteomic data, but it is also fit for expression data in RNA-seq and metabolome. 
+It is associated DEP and co-expression network module, and constructed a Mod-DEP network to remove lower connectivity DEP. The lower connectivity DEP is hard to get the key function in PPI and is more likely a false postive protein. The Mod-DEP network can also get DEP related proteins which is more likely a false negative protein. 
+It provides the essential statisic analysis included t.test, ANOVA analysis to extract differential proteins. The package also provide some module analysis included PCA analysis, two enrichment analysis, Planner maximally filtered graph extraction and hub analysis. The co-expression network should constructed by other package or software.('WGCNA' package or others) 
 
 ## Installation
 
@@ -34,7 +34,7 @@ devtools::install_github("liukf10/DDPNA")
 
 This is a basic example which shows you how to solve a common problem:
 
-```{r example}
+```{r echo=FALSE}
 library(DDPNA)
 ##data extract and clean
 data(Dforimpute)
@@ -59,9 +59,14 @@ up <- changedID(oriData, group, vs.set2 = "ad",vs.set1 = "ctl",
                 datatype = "none",fctype = "up")
 ##module-DFP associated analysis
 FCSenrich <- Module_Enrich(Module, up, datainf = rownames(oriData), coln="ori.ID")
-FCSenrich <- FCSenrichplot(FCSenrich)
+FCSenrich <- FCSenrichplot(FCSenrich,plot=F)
+```
+
+
+
+```{r echo=FALSE}
 pos <- which(net$colors == 4)
-Mod4_PCA <- modpcomp(logD[pos,], net$colors[pos], plot = TRUE, group = group)
+Mod4_PCA <- modpcomp(logD[pos,], net$colors[pos], plot = F, group = group)
 Mod4 <- getmoduleHub(logD, Module, 4, coln = "ori.ID",adjustp = FALSE)
 if (requireNamespace("MEGENA", quietly = TRUE)) {
   try(library(MEGENA), silent = TRUE)
@@ -74,7 +79,6 @@ if (requireNamespace("MEGENA", quietly = TRUE)) {
                         show.topn.hubs = 10, node.sizeProp = 13,
                         label.sizeProp = 13, label.scaleFactor = 10,
                         layout = "kamada.kawai")
-  print(PMFG)
   }
 
 

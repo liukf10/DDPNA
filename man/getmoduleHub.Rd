@@ -9,7 +9,7 @@ extract PMFG information and get Module hub proteins.
 }
 \usage{
 getmoduleHub(data, module, mod_num, coln = "new.ID",
-             cor.sig = 0.05, cor.r = 0,
+             cor.sig = 0.05, cor.r = 0, cor.adj="none",
              adjustp = TRUE, hub.p = 0.05)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -31,6 +31,9 @@ a numberic value indicated that correlation p value less than cor.sig will be pi
 }
   \item{cor.r}{
 a numberic value indicated that correlation r value larger than cor.r will be picked.
+}
+  \item{cor.adj}{
+P value correction method. method information can see in \code{p.adjust.method}
 }
   \item{adjustp}{
 a logical value indicating whether pick hub protein by FDR methods.

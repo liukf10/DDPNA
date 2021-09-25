@@ -105,8 +105,8 @@ Mod3 <- getmoduleHub(logD, Module, 3, coln = "ori.ID", adjustp = FALSE)
 
 newnet <- DEP_Mod_net_plot(Mod3, sets,
                            data = logD, module = Module,
-                           plot = F, filename = NULL, filetype = "pdf",
-                           OnlyPlotLast = F,reconstructNet = F)
+                           plot = FALSE, filename = NULL, filetype = "pdf",
+                           OnlyPlotLast = FALSE,reconstructNet = FALSE)
 }
 
 }

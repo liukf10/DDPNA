@@ -1,12 +1,12 @@
 Package: DDPNA
 Type: Package
-Title: Disease-Related Differential Proteins and Co-Expression Network Analysis
-Version: 0.2.2
-Date: 2019-6-5
+Title: Disease-Drived Differential Proteins Co-Expression Network Analysis
+Version: 0.3.0
+Date: 2021-7-29
 Authors@R: c(person("Kefu","Liu",email="liukefu19@163.com",role=c("aut","cre")))
 Author: Kefu Liu [aut, cre]
 Maintainer: Kefu Liu <liukefu19@163.com>
-URL: http://github.com/liukf10/DDPNA
+URL: https://github.com/liukf10/DDPNA
 BugReports: https://github.com/liukf10/DDPNA/issues
 Description:  Functions designed to connect disease-related differential proteins and 
   co-expression network. It provides the basic statics analysis included t test, ANOVA analysis. 

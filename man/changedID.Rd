@@ -52,7 +52,7 @@ data <- imputedData
 logD <- data$log2_value
 rownames(logD) <- data$inf$ori.ID
 group <- gsub("[0-9]+","", colnames(logD))
-up <- changedID(logD, group, vs.set2 = "ad", vs.set1 = "ctl",
+up <- changedID(logD[201:260,], group, vs.set2 = "ad", vs.set1 = "ctl",
               rank = "foldchange",anova = FALSE, Padj = "none", cutoff = 1,
               datatype = "log2", fctype = "up")
 
